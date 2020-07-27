@@ -11,12 +11,10 @@ class Solution
     solution.include?(let)
   end
 
-  def fit_letters
-    
-
-  def gen_display
-    blanks = solution.map{ |let| "_ " }
-    blanks
+  def fit_letters(let)
+    index = []
+    solution.each_with_index { |char, i| index.push(i) if char == let}
+    index
   end
 
   # Private
@@ -31,48 +29,68 @@ end
 
 class Board
 
-  def display(misses, display)
-    puts '*************************************'
+  def display(misses, display, guessed)
+
+    puts '********************************************************************************'
+    print 'Letters guessed:  ' 
+    guessed.each {|let| print "#{let} "}
+    puts ''
     puts 'Misses Remaining: '+('X '*misses)
     display.each do |let|
       print "#{let} "
     end
     puts ''
-    puts '*************************************'
+    puts '********************************************************************************'
   end
 end
 
 class Game
 
   attr_accessor :solution, :guess, :let_remain, :alphabet, :misses, :display_word, :board, :win
-  def initialize(solution, board)
+  def initialize(solution, board, misses = 6, guessed = [])
     @solution = solution
     @board = board
-    @guess = ''
-    @let_guessed = []
     @alphabet = gen_alpha
-    @misses = 6
-    @display_word = solution.gen_display
+    @misses = misses
+    @guess = ''
+    @guessed = guessed
+    @display_word = gen_display
     @win = false
+  
   end
 
   def run
     puts "Welcome to hangman!"
-    board.display(misses,display_word)
-    until misses == 0 || win == true
-      guess = find_input
-      if check_guess?
-        index = fit_letters
-        update_display
-      else
-        misses -= 1
-      end
-      board.display(misses,display_word)
-      win = true
-    end
+    binding.pry
+    board.display(@misses, display_word, @guessed)
 
+    until misses.zero? || @win == true
+      find_input
+      if solution.check_guess?(@guess)
+        index = solution.fit_letters(@guess)
+        update_display(index, guess)
+      else
+        @misses -= 1
+      end
+      
+      if display_word == solution.solution
+        @win = true
+      end
+      board.display(misses, display_word, @guessed)
+    end
+    ending
   end
+
   # PRIVATE
+
+  def ending
+    if @misses == 0
+      puts "You lose! The word was #{solution.solution.join}!"
+    else
+      puts "You won! Good job!"
+    end
+  end
+
   def gen_alpha
     %w[a b c d e f g h i j k l m n o p q r s t u v w x y z]
   end
@@ -84,15 +102,27 @@ class Game
       puts "Invalid guess, guess again: "
       input = gets.chomp.downcase
     end
-    input
+    @guess = input
+    @guessed.push(input)
   end
 
   def check_valid?(input)
-    return alphabet.include?(input)
+    alphabet.include?(input) && !@guessed.include?(input)
   end
 
-  def update_display(index)
-    index.each 
+  def update_display(index, guess)
+    index.each do |i|
+      display_word[i] = guess
+    end
+  end
+
+  def gen_display
+
+    word = solution.solution.map do |let|
+      @guessed.include?(let) ? let : '_'
+    end
+    word
+
   end
 
 end
