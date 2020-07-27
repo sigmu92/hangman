@@ -173,8 +173,15 @@ def start_game
   end
 end
 
+keep_playing = true
 
-puts 'Welcome to hangman!'
-game = start_game
-game.run
+until !keep_playing
+  puts 'Welcome to hangman!'
+  game = start_game
+  game.run
 
+  puts "Would you like to play again(y/n)?"
+  if gets.chomp.downcase != 'y'
+    keep_playing = false
+  end
+end
